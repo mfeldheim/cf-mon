@@ -1,18 +1,20 @@
 {
-  "name": "cf-mon",
-  "main": "src/index.ts",
-  "compatibility_date": "2024-09-23",
-  "assets": {
-    "directory": "./dist"
-  },
-  "kv_namespaces": [
-    {
-      "binding": "STATS",
-      "id": "PLACEHOLDER_REPLACE_AFTER_KV_CREATE",
-      "preview_id": "PLACEHOLDER_REPLACE_AFTER_KV_CREATE"
-    }
-  ],
-  "triggers": {
-    "crons": ["*/1 * * * *"]
-  }
+	"name": "cf-mon",
+	"account_id": "66d36bacc091dcdf478a40e30fd61785",
+	"main": "src/index.ts",
+	"compatibility_date": "2024-09-23",
+	"assets": {
+		"directory": "./dist"
+	},
+	"kv_namespaces": [
+		{
+			"binding": "STATS",
+			"id": "b4f2475b94b04a5ab9c6a61cd2dbfb1b"
+		}
+	],
+	"triggers": {
+		"crons": [
+			"*/1 * * * *"
+		]
+	}
 }

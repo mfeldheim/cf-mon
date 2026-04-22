@@ -21,9 +21,14 @@ async function getCachedZones(kv: KVNamespace, apiToken: string, accountId: stri
 
 async function runCron(env: Env): Promise<void> {
   const zones = await getCachedZones(env.STATS, env.CF_API_TOKEN, env.CF_ACCOUNT_ID);
-  if (zones.length === 0) return;
+  if (zones.length === 0) {
+    console.error('runCron: no zones found, aborting');
+    return;
+  }
 
+  console.log(`runCron: fetching stats for ${zones.length} zones`);
   const zoneStats: ZoneStats[] = await fetchZoneStats(zones, env.CF_API_TOKEN, env.CF_ACCOUNT_ID);
+  console.log(`runCron: got stats for ${zoneStats.length} zones`);
 
   const totalRps = zoneStats.reduce((s, z) => s + z.requestsPerSecond, 0);
   const humanRps = zoneStats.reduce((s, z) => s + z.humanRps, 0);
