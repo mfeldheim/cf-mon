@@ -39,7 +39,8 @@ function buildBatchQuery(zones: ZoneRef[]): string {
           limit: 10000
         ) {
           count
-          dimensions { cacheStatus }
+          avg { sampleInterval }
+          dimensions { cacheStatus verifiedBotCategory }
         }
       }
     }
@@ -77,7 +78,11 @@ export async function fetchZoneStats(
       const json = await resp.json() as {
         data: { viewer: { zones: Array<{
           zoneTag: string;
-          traffic: Array<{ count: number; dimensions: { cacheStatus: string } }>;
+          traffic: Array<{
+            count: number;
+            avg: { sampleInterval: number };
+            dimensions: { cacheStatus: string; verifiedBotCategory: string };
+          }>;
         }> } };
         errors?: Array<{ message: string }>;
       };
@@ -91,13 +96,17 @@ export async function fetchZoneStats(
       const zoneNameMap = new Map(batch.map(z => [z.id, z.name]));
 
       for (const zone of json.data?.viewer?.zones ?? []) {
-        const totalCount = zone.traffic.reduce((s, r) => s + r.count, 0);
-        const hitCount = zone.traffic
+        // count is samples; multiply by sampleInterval for actual requests
+        const totalCount = zone.traffic.reduce((s, r) => s + r.count * r.avg.sampleInterval, 0);
+        const hitCount   = zone.traffic
           .filter(r => r.dimensions.cacheStatus === 'hit')
-          .reduce((s, r) => s + r.count, 0);
+          .reduce((s, r) => s + r.count * r.avg.sampleInterval, 0);
+        const botCount   = zone.traffic
+          .filter(r => r.dimensions.verifiedBotCategory !== '')
+          .reduce((s, r) => s + r.count * r.avg.sampleInterval, 0);
         const cacheHitRatio = totalCount > 0 ? hitCount / totalCount : 0;
         const zoneName = zoneNameMap.get(zone.zoneTag) ?? zone.zoneTag;
-        results.push(parseZoneData(zone.zoneTag, zoneName, { totalCount, cachedRequests: hitCount, botCount: 0, cacheHitRatio }));
+        results.push(parseZoneData(zone.zoneTag, zoneName, { totalCount, cachedRequests: hitCount, botCount, cacheHitRatio }));
       }
     } catch (err) {
       console.error('fetchZoneStats batch error:', err);
